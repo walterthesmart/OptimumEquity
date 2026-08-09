@@ -92,9 +92,6 @@ export function AppShell({
               <h1 className="truncate text-base font-semibold tracking-tight sm:text-lg">
                 {sections.find((s) => s.id === active)?.label}
               </h1>
-              <p className="hidden truncate text-[11px] tracking-wide text-muted-foreground sm:block">
-                Macro regime · Cycle position · Risk overlay
-              </p>
             </div>
             <div className="flex items-center gap-2">
               <span className="numeric hidden rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-muted-foreground sm:inline-block">
