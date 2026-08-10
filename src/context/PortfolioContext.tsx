@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
 import type { Transaction, PriceData } from '../types';
-import { getTransactions, addTransaction as addTx, addBulkTransactions, removeTransaction, clearAllTransactions } from '../actions/transactions';
 import { getPrices } from '../actions/prices';
+import initialTransactions from '../data/transactions.json';
 
 interface PortfolioContextType {
   transactions: Transaction[];
@@ -25,7 +25,7 @@ interface PortfolioContextType {
 const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
 
 export function PortfolioProvider({ children }: { children: ReactNode }) {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions] = useState<Transaction[]>(initialTransactions as Transaction[]);
   const [fetchedPrices, setFetchedPrices] = useState<Record<string, PriceData>>({});
   const [customPrices, setCustomPrices] = useState<Record<string, number>>({});
   const [isLoadingPrices, setIsLoadingPrices] = useState(false);
@@ -36,22 +36,15 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [endDate, setEndDate] = useState<string | null>(null);
 
   useEffect(() => {
-    getTransactions().then(res => {
-      if (res.data) {
-        setTransactions(res.data);
+    const savedCustomPrices = localStorage.getItem('portfolio_custom_prices');
+    if (savedCustomPrices) {
+      try {
+        setCustomPrices(JSON.parse(savedCustomPrices));
+      } catch (e) {
+        console.error('Failed to parse saved custom prices');
       }
-    }).catch(e => console.error('Failed to load transactions:', e))
-    .finally(() => {
-      const savedCustomPrices = localStorage.getItem('portfolio_custom_prices');
-      if (savedCustomPrices) {
-        try {
-          setCustomPrices(JSON.parse(savedCustomPrices));
-        } catch (e) {
-          console.error('Failed to parse saved custom prices');
-        }
-      }
-      setIsInitialized(true);
-    });
+    }
+    setIsInitialized(true);
   }, []);
 
   useEffect(() => {
@@ -93,40 +86,11 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     }
   }, [transactions, isInitialized, refreshPrices]);
 
-  const addTransaction = async (tx: Transaction) => {
-    const res = await addTx({ data: tx as any });
-    if (res.data) {
-      setTransactions((prev) => [...prev, res.data as Transaction]);
-    }
-  };
-
-  const importTransactions = async (txs: Transaction[]) => {
-    const existingIds = new Set(transactions.map(t => t.id));
-    const newTxs = txs.filter(t => !existingIds.has(t.id));
-    
-    if (newTxs.length > 0) {
-      const res = await addBulkTransactions({ data: newTxs as any });
-      if (res.data) {
-        setTransactions((prev) => [...prev, ...res.data as Transaction[]]);
-      }
-    }
-  };
-
-  const deleteTransaction = async (id: string) => {
-    const res = await removeTransaction({ data: { id } });
-    if (res.success) {
-      setTransactions((prev) => prev.filter((t) => t.id !== id));
-    }
-  };
-
-  const clearTransactions = async () => {
-    if (confirm('Are you sure you want to delete all transactions?')) {
-      const res = await clearAllTransactions();
-      if (res.success) {
-        setTransactions([]);
-      }
-    }
-  };
+  // Read-only implementation - disable modifications
+  const addTransaction = async (tx: Transaction) => {};
+  const importTransactions = async (txs: Transaction[]) => {};
+  const deleteTransaction = async (id: string) => {};
+  const clearTransactions = async () => {};
 
   const updateCustomPrice = (symbol: string, price: number | null) => {
     setCustomPrices((prev) => {

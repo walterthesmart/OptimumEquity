@@ -121,10 +121,10 @@ export function Dashboard() {
         key="transactions"
         label="Transactions"
         value={`${transactions.length}`}
-        meta="History & Import"
+        meta="History"
         metaTone="muted"
         icon={AlertTriangle}
-        onClick={() => setModal("transactions")}
+        onClick={() => setSection("transactions")}
       />
     ),
   } as const;
