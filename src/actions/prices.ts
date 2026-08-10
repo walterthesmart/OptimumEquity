@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { prisma } from "../lib/prisma";
 import YahooFinance from 'yahoo-finance2';
 const yahooFinance = new YahooFinance();
 import { z } from "zod";
@@ -87,38 +86,7 @@ export const getPrices = createServerFn({ method: "POST" })
           
           let historical: any[] = [];
           if (startDate) {
-            const existingData = await prisma.historicalPrice.findMany({
-              where: { symbol },
-              orderBy: { date: 'desc' },
-              take: 1
-            });
-
-            let fetchStartDate = startDate;
-            if (existingData.length > 0) {
-              const latestDbDate = existingData[0].date;
-              if (latestDbDate >= startDate) {
-                fetchStartDate = latestDbDate;
-              }
-            }
-
-            const freshData = await fetchHistoricalWithFallback(symbol, fetchStartDate);
-            
-            if (freshData.length > 0) {
-              for (const d of freshData) {
-                await prisma.historicalPrice.upsert({
-                  where: { symbol_date: { symbol, date: d.date } },
-                  update: { close: d.close },
-                  create: { symbol, date: d.date, close: d.close }
-                });
-              }
-            }
-
-            const cachedSeries = await prisma.historicalPrice.findMany({
-              where: { symbol, date: { gte: startDate } },
-              orderBy: { date: 'asc' }
-            });
-            
-            historical = cachedSeries.map(c => ({ date: c.date, close: c.close }));
+            historical = await fetchHistoricalWithFallback(symbol, startDate);
           }
 
           return {
