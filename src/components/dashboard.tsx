@@ -30,6 +30,7 @@ function SummaryCard({
   metaTone,
   icon: Icon,
   onClick,
+  extra,
 }: {
   label: string;
   value: string;
@@ -37,6 +38,7 @@ function SummaryCard({
   metaTone: "mint" | "sand" | "negative" | "muted" | "positive";
   icon: typeof Globe2;
   onClick: () => void;
+  extra?: React.ReactNode;
 }) {
   const tone = {
     mint: "bg-mint/15 text-mint",
@@ -60,7 +62,10 @@ function SummaryCard({
       <div>
         <p className="numeric text-2xl leading-tight font-semibold sm:text-3xl">{value}</p>
         <div className="mt-2.5 flex items-center justify-between gap-2">
-          <span className={`label-xs rounded-sm px-2 py-1 ${tone}`}>{meta}</span>
+          <div className="flex items-center gap-2">
+            <span className={`label-xs rounded-sm px-2 py-1 ${tone}`}>{meta}</span>
+            {extra}
+          </div>
           <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
         </div>
       </div>
@@ -80,6 +85,9 @@ export function Dashboard() {
   const cashPosition = positions.find(p => p.symbol === 'GEF Cash');
   const cashBuffer = cashPosition ? (cashPosition.currentValue / metrics.totalValue) * 100 : 0;
   
+  const SHARES_OUTSTANDING = 68818;
+  const nav = metrics.totalValue / SHARES_OUTSTANDING;
+
   const date = formatDate(new Date());
 
   const summaryCards = {
@@ -90,6 +98,7 @@ export function Dashboard() {
         value={`$${metrics.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
         meta={metrics.returnPercentage >= 0 ? `+${metrics.returnPercentage.toFixed(2)}% Return` : `${metrics.returnPercentage.toFixed(2)}% Return`}
         metaTone={metrics.returnPercentage >= 0 ? "positive" : "negative"}
+        extra={<span className="text-xs text-muted-foreground font-medium bg-muted px-2 py-1 rounded-sm">NAV: ${nav.toFixed(2)}</span>}
         icon={Globe2}
         onClick={() => setModal("positions")}
       />
