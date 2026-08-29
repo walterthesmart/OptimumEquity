@@ -17,7 +17,7 @@ import { DetailSheet, PanelBlock } from "@/components/detail-sheet";
 import { TransactionPanel, PositionsPanel } from "@/components/panels";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePortfolio } from "@/context/PortfolioContext";
-import { calculatePositions, calculateOverallMetrics, calculateAdvancedMetrics } from "@/lib/calculations";
+import { calculatePositions, calculateOverallMetrics, calculateAdvancedMetrics, getSharesOutstanding } from "@/lib/calculations";
 import { formatDate } from "@/lib/macro-data";
 import { TransactionsPage } from "./transactions-page";
 import { NavHistoryPage } from "./nav-history-page";
