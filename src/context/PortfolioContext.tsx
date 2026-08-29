@@ -56,6 +56,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const refreshPrices = useCallback(async () => {
     const rawSymbols = Array.from(new Set(transactions.map((t) => t.symbol)));
     const symbols = rawSymbols.filter(s => s !== 'GEF Cash' && s !== 'Cash');
+    if (!symbols.includes('URTH')) symbols.push('URTH');
     if (symbols.length === 0) return;
 
     setIsLoadingPrices(true);

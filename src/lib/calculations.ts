@@ -1,5 +1,6 @@
 import { Transaction, PriceData, PortfolioPosition } from '@/types';
 import { calculateTimeWeightedReturn, calculateMoneyWeightedReturn } from '@railpath/finance-toolkit';
+import historicalNavData from '@/data/historical-nav.json';
 
 export function calculatePositions(
   transactions: Transaction[],
@@ -346,6 +347,8 @@ export interface NavHistoryData {
   nav: number;
   dailyReturn: number;
   totalReturn: number;
+  msciWorld?: number | null;
+  msciTotalReturn?: number | null;
 }
 
 export function getSharesOutstanding(dateStr: string): number {
@@ -390,7 +393,22 @@ export function calculateHistoricalNAV(
   let initialNav: number | null = null;
   let previousNav: number | null = null;
 
-  for (const dateStr of sortedDates) {
+  const hardcodedHistory = historicalNavData as NavHistoryData[];
+  
+  let initialMsci: number | null = null;
+  
+  if (hardcodedHistory.length > 0) {
+    history.push(...hardcodedHistory);
+    const lastHardcoded = hardcodedHistory[hardcodedHistory.length - 1];
+    previousNav = lastHardcoded.nav;
+    initialNav = hardcodedHistory[0].nav;
+    initialMsci = hardcodedHistory[0].msciWorld || null;
+  }
+
+  // Filter sortedDates to only include dates from '2026-07-28' onwards
+  const dynamicDates = sortedDates.filter(d => new Date(d).getTime() >= new Date('2026-07-28').getTime());
+
+  for (const dateStr of dynamicDates) {
     const targetMs = new Date(dateStr).getTime() + (24 * 60 * 60 * 1000) - 1;
 
     while (txIndex < sortedTxs.length) {
@@ -444,13 +462,30 @@ export function calculateHistoricalNAV(
       const dailyReturn = previousNav ? (nav - previousNav) / previousNav : 0;
       const totalReturn = initialNav ? (nav - initialNav) / initialNav : 0;
       
+      let msciWorld: number | undefined;
+      const urthHist = getHistoricalPrice(livePrices, 'URTH', dateStr);
+      if (urthHist !== null) {
+        msciWorld = urthHist;
+      } else if (livePrices['URTH']?.price) {
+        msciWorld = livePrices['URTH'].price;
+      }
+      
+      let msciTotalReturn = 0;
+      if (msciWorld && initialMsci) {
+          msciTotalReturn = (msciWorld - initialMsci) / initialMsci;
+      } else if (msciWorld && !initialMsci) {
+          initialMsci = msciWorld;
+      }
+      
       history.push({
         date: dateStr,
         netAssets,
         sharesOutstanding,
         nav,
         dailyReturn,
-        totalReturn
+        totalReturn,
+        msciWorld,
+        msciTotalReturn
       });
       
       previousNav = nav;

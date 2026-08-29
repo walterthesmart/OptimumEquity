@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { AppShell, type SectionId } from "@/components/app-shell";
 import { DetailSheet, PanelBlock } from "@/components/detail-sheet";
-import { TransactionPanel, PositionsPanel } from "@/components/panels";
+import { TransactionPanel, PositionsPanel, NavChartPanel } from "@/components/panels";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePortfolio } from "@/context/PortfolioContext";
 import { calculatePositions, calculateOverallMetrics, calculateAdvancedMetrics, getSharesOutstanding } from "@/lib/calculations";
@@ -22,7 +22,7 @@ import { formatDate } from "@/lib/macro-data";
 import { TransactionsPage } from "./transactions-page";
 import { NavHistoryPage } from "./nav-history-page";
 
-type ModalId = "transactions" | "positions" | "performance" | null;
+type ModalId = "transactions" | "positions" | "performance" | "navChart" | null;
 
 function SummaryCard({
   label,
@@ -101,7 +101,7 @@ export function Dashboard() {
         metaTone={metrics.returnPercentage >= 0 ? "positive" : "negative"}
         extra={<span className="text-xs text-muted-foreground font-medium bg-muted px-2 py-1 rounded-sm">NAV: ${nav.toFixed(2)}</span>}
         icon={Globe2}
-        onClick={() => setModal("positions")}
+        onClick={() => setModal("navChart")}
       />
     ),
     twr: (
@@ -192,49 +192,13 @@ export function Dashboard() {
       </DetailSheet>
 
       <DetailSheet
-        open={modal === "positions"}
-        onOpenChange={(v) => setModal(v ? "positions" : null)}
+        open={modal === "navChart"}
+        onOpenChange={(v) => setModal(v ? "navChart" : null)}
         eyebrow="Asset Allocation"
-        title="Holdings"
-        description="Review your active positions and their current weights."
+        title="NAV & MSCI World"
+        description="Historical NAV and MSCI World performance."
       >
-        <div className="p-4 space-y-4">
-           <div className="grid grid-cols-2 gap-4 mb-2 border-b border-border/60 pb-6">
-              <div>
-                 <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">Current Value</p>
-                 <p className="font-semibold text-lg">${metrics.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-              </div>
-              <div>
-                 <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">Total Cost</p>
-                 <p className="font-semibold text-lg">${metrics.totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-              </div>
-              <div>
-                 <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">Cash Balance</p>
-                 <p className="font-semibold text-lg text-mint">${cashPosition?.currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</p>
-              </div>
-              <div>
-                 <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">Cash Buffer</p>
-                 <p className="font-semibold text-lg text-muted-foreground">{cashBuffer.toFixed(2)}%</p>
-              </div>
-           </div>
-           {positions.map(pos => (
-              <div key={pos.symbol} className="flex justify-between items-center bg-card p-3 rounded-md border border-border">
-                 <div>
-                    <div className="font-semibold flex items-baseline gap-2">
-                      {pos.symbol}
-                      <span className="text-xs text-muted-foreground font-normal truncate max-w-[150px] inline-block">{livePrices[pos.symbol]?.longName}</span>
-                    </div>
-                    <div className="text-xs text-muted-foreground">{pos.shares} shares @ ${pos.averagePrice.toFixed(2)}</div>
-                 </div>
-                 <div className="text-right">
-                    <div className="font-semibold">${pos.currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                    <div className={`text-xs ${pos.returnPercentage >= 0 ? 'text-positive' : 'text-negative'}`}>
-                       {pos.returnPercentage >= 0 ? '+' : ''}{pos.returnPercentage.toFixed(2)}%
-                    </div>
-                 </div>
-              </div>
-           ))}
-        </div>
+        <NavChartPanel />
       </DetailSheet>
       
       <DetailSheet

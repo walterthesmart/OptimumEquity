@@ -1,13 +1,91 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { PanelBlock, StatRow, DetailSheet } from "@/components/detail-sheet";
 import { TransactionForm } from "./transaction-form";
 import { CSVUploader } from "./csv-uploader";
 import { usePortfolio } from "@/context/PortfolioContext";
 import { format } from "date-fns";
 import type { PortfolioPosition } from "@/types";
-import { calculateAdvancedMetrics } from "@/lib/calculations";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { calculateAdvancedMetrics, calculateHistoricalNAV } from "@/lib/calculations";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { StockDetailSheet } from "./stock-detail-sheet";
+
+export function NavChartPanel() {
+  const { transactions, livePrices } = usePortfolio();
+
+  const history = useMemo(() => {
+    const raw = calculateHistoricalNAV(transactions, livePrices);
+    // Convert msciTotalReturn to percentage (x100) so it matches Total Return format
+    return raw.map(d => ({
+      ...d,
+      totalReturnPct: d.totalReturn * 100,
+      msciTotalReturnPct: d.msciTotalReturn ? d.msciTotalReturn * 100 : 0
+    }));
+  }, [transactions, livePrices]);
+
+  if (history.length === 0) {
+    return <div className="text-center py-10 text-muted-foreground">No historical NAV data available.</div>;
+  }
+
+  return (
+    <section className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold mb-1">NAV & MSCI World Performance</h3>
+        <p className="text-sm text-muted-foreground">Tracking the total return from inception.</p>
+      </div>
+      
+      <div className="h-[400px] w-full mt-6 bg-card border border-border/60 rounded-md p-4">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={history} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+            <XAxis 
+              dataKey="date" 
+              tickFormatter={(val) => {
+                const date = new Date(val);
+                return `${date.toLocaleString('default', { month: 'short' })} '${date.getFullYear().toString().slice(2)}`;
+              }}
+              minTickGap={30}
+              tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} 
+              axisLine={false} 
+              tickLine={false} 
+            />
+            <YAxis 
+              tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} 
+              tickFormatter={(val) => `${val}%`}
+              axisLine={false} 
+              tickLine={false} 
+            />
+            <Tooltip 
+              contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '6px', fontSize: '12px' }}
+              itemStyle={{ color: 'var(--foreground)' }}
+              labelStyle={{ color: 'var(--muted-foreground)', marginBottom: '4px' }}
+              formatter={(value: number, name: string) => [`${value.toFixed(2)}%`, name === 'totalReturnPct' ? 'Portfolio Return' : 'MSCI World Return']}
+            />
+            <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+            <Line type="monotone" name="Portfolio Return" dataKey="totalReturnPct" stroke="var(--primary)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+            <Line type="monotone" name="MSCI World Return" dataKey="msciTotalReturnPct" stroke="var(--chart-3)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 mt-6">
+        <div className="bg-card border border-border/60 rounded-md p-4">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Portfolio Return</p>
+          <p className={`text-2xl font-semibold ${history[history.length - 1].totalReturnPct >= 0 ? 'text-positive' : 'text-negative'}`}>
+            {history[history.length - 1].totalReturnPct >= 0 ? '+' : ''}{history[history.length - 1].totalReturnPct.toFixed(2)}%
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">Since Inception</p>
+        </div>
+        <div className="bg-card border border-border/60 rounded-md p-4">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">MSCI World</p>
+          <p className={`text-2xl font-semibold ${history[history.length - 1].msciTotalReturnPct >= 0 ? 'text-positive' : 'text-negative'}`}>
+            {history[history.length - 1].msciTotalReturnPct >= 0 ? '+' : ''}{history[history.length - 1].msciTotalReturnPct.toFixed(2)}%
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">Since Inception</p>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export function TransactionPanel() {
   const { transactions, deleteTransaction, clearTransactions } = usePortfolio();
