@@ -338,3 +338,124 @@ export function calculateAdvancedMetrics(
 }
 
 
+
+export interface NavHistoryData {
+  date: string;
+  netAssets: number;
+  sharesOutstanding: number;
+  nav: number;
+  dailyReturn: number;
+  totalReturn: number;
+}
+
+export function getSharesOutstanding(dateStr: string): number {
+  const date = new Date(dateStr).getTime();
+  if (date >= new Date('2026-07-26').getTime()) return 68821.0169491525;
+  if (date >= new Date('2026-07-25').getTime()) return 68820.0169491525;
+  if (date >= new Date('2026-07-24').getTime()) return 68819.0169491525;
+  if (date >= new Date('2026-02-03').getTime()) return 68818.01694915254;
+  if (date >= new Date('2025-02-03').getTime()) return 39157.0;
+  if (date >= new Date('2024-07-02').getTime()) return 30000.0;
+  return 30000.0;
+}
+
+export function calculateHistoricalNAV(
+  transactions: Transaction[],
+  livePrices: Record<string, PriceData>
+): NavHistoryData[] {
+  if (!transactions || transactions.length === 0) return [];
+
+  const dateSet = new Set<string>();
+  Object.values(livePrices || {}).forEach(pd => {
+    if (pd && pd.historical) {
+      pd.historical.forEach(h => {
+        if (h && h.date) {
+          dateSet.add(h.date.split('T')[0]);
+        }
+      });
+    }
+  });
+
+  const sortedDates = Array.from(dateSet).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+  
+  if (sortedDates.length === 0) return [];
+
+  const sortedTxs = [...transactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  
+  let currentCash = 0;
+  const holdings: Record<string, number> = {};
+  let txIndex = 0;
+
+  const history: NavHistoryData[] = [];
+  let initialNav: number | null = null;
+  let previousNav: number | null = null;
+
+  for (const dateStr of sortedDates) {
+    const targetMs = new Date(dateStr).getTime() + (24 * 60 * 60 * 1000) - 1;
+
+    while (txIndex < sortedTxs.length) {
+      const tx = sortedTxs[txIndex];
+      const txTime = new Date(tx.date).getTime();
+      
+      if (txTime > targetMs) break;
+
+      const amount = (tx.price * tx.shares) + (tx.fees || 0);
+      
+      if (tx.symbol === 'GEF Cash') {
+        if (tx.type === 'TXIN' || tx.type === 'BUY') {
+          currentCash += tx.shares * tx.price;
+        } else if (tx.type === 'TXOUT' || tx.type === 'SELL') {
+          currentCash -= tx.shares * tx.price;
+        }
+      } else {
+        if (tx.type === 'TXIN') {
+          currentCash += tx.shares * tx.price;
+        } else if (tx.type === 'TXOUT') {
+          currentCash -= tx.shares * tx.price;
+        } else if (tx.type === 'BUY') {
+          currentCash -= amount;
+          holdings[tx.symbol] = (holdings[tx.symbol] || 0) + tx.shares;
+        } else if (tx.type === 'SELL') {
+          const sellProceeds = (tx.price * tx.shares) - (tx.fees || 0);
+          currentCash += sellProceeds;
+          holdings[tx.symbol] = (holdings[tx.symbol] || 0) - tx.shares;
+        }
+      }
+      txIndex++;
+    }
+
+    let netAssets = currentCash;
+    for (const [sym, shares] of Object.entries(holdings)) {
+      if (shares > 0) {
+        const histPrice = getHistoricalPrice(livePrices, sym, dateStr);
+        const priceToUse = histPrice !== null ? histPrice : (livePrices[sym]?.price || 0);
+        netAssets += shares * priceToUse;
+      }
+    }
+
+    const sharesOutstanding = getSharesOutstanding(dateStr);
+    const nav = netAssets / sharesOutstanding;
+    
+    if (netAssets > 0) {
+      if (initialNav === null) {
+        initialNav = nav;
+      }
+      
+      const dailyReturn = previousNav ? (nav - previousNav) / previousNav : 0;
+      const totalReturn = initialNav ? (nav - initialNav) / initialNav : 0;
+      
+      history.push({
+        date: dateStr,
+        netAssets,
+        sharesOutstanding,
+        nav,
+        dailyReturn,
+        totalReturn
+      });
+      
+      previousNav = nav;
+    }
+  }
+
+  return history;
+}

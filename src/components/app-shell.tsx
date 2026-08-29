@@ -11,11 +11,12 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-export type SectionId = "overview" | "transactions";
+export type SectionId = "overview" | "transactions" | "navHistory";
 
 export const sections: { id: SectionId; label: string; short: string; icon: typeof LayoutGrid }[] = [
   { id: "overview", label: "Overview", short: "Home", icon: LayoutGrid },
   { id: "transactions", label: "Transactions", short: "History", icon: Activity },
+  { id: "navHistory", label: "NAV History", short: "NAV", icon: Sparkles },
 ];
 
 export function AppShell({

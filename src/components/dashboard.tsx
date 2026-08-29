@@ -20,6 +20,7 @@ import { usePortfolio } from "@/context/PortfolioContext";
 import { calculatePositions, calculateOverallMetrics, calculateAdvancedMetrics } from "@/lib/calculations";
 import { formatDate } from "@/lib/macro-data";
 import { TransactionsPage } from "./transactions-page";
+import { NavHistoryPage } from "./nav-history-page";
 
 type ModalId = "transactions" | "positions" | "performance" | null;
 
@@ -85,7 +86,7 @@ export function Dashboard() {
   const cashPosition = positions.find(p => p.symbol === 'GEF Cash');
   const cashBuffer = cashPosition ? (cashPosition.currentValue / metrics.totalValue) * 100 : 0;
   
-  const SHARES_OUTSTANDING = 68818;
+  const SHARES_OUTSTANDING = getSharesOutstanding(new Date().toISOString());
   const nav = metrics.totalValue / SHARES_OUTSTANDING;
 
   const date = formatDate(new Date());
@@ -141,6 +142,7 @@ export function Dashboard() {
   const sectionCards: Record<SectionId, (keyof typeof summaryCards)[]> = {
     overview: ["totalValue", "twr", "cash", "transactions"],
     transactions: [],
+    navHistory: [],
   };
 
   const visible = sectionCards[section];
@@ -165,6 +167,9 @@ export function Dashboard() {
        )}
        {section === "transactions" && (
          <TransactionsPage positions={positions} />
+       )}
+       {section === "navHistory" && (
+         <NavHistoryPage />
        )}
     </div>
   );
