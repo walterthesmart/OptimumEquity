@@ -1,6 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import { DetailSheet } from "@/components/detail-sheet";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { usePortfolio } from "@/context/PortfolioContext";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface StockDetailSheetProps {
   selectedSymbol: string | null;
@@ -21,6 +33,11 @@ export function StockDetailSheet({
   totalReturn,
   returnPercentage
 }: StockDetailSheetProps) {
+  const { addTransaction } = usePortfolio();
+  const [isSellOpen, setIsSellOpen] = useState(false);
+  const [sellShares, setSellShares] = useState<number | string>("");
+  const [sellPrice, setSellPrice] = useState<number | string>("");
+
   const chartData = React.useMemo(() => {
     if (!selectedSymbol || !livePrices || !livePrices[selectedSymbol] || !transactions) return [];
     const hist = livePrices[selectedSymbol].historical || [];
@@ -60,6 +77,42 @@ export function StockDetailSheet({
     return [...transactions].filter(t => t.symbol === selectedSymbol).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [selectedSymbol, transactions]);
 
+  const currentShares = React.useMemo(() => {
+    if (!selectedSymbol || !transactions) return 0;
+    return transactions.filter(t => t.symbol === selectedSymbol).reduce((acc, tx) => {
+      if (tx.type === 'BUY' || tx.type === 'TXIN') return acc + tx.shares;
+      if (tx.type === 'SELL' || tx.type === 'TXOUT') return acc - tx.shares;
+      return acc;
+    }, 0);
+  }, [selectedSymbol, transactions]);
+
+  React.useEffect(() => {
+    if (isSellOpen && selectedSymbol && livePrices?.[selectedSymbol]) {
+      setSellShares(currentShares);
+      setSellPrice(livePrices[selectedSymbol].price);
+    }
+  }, [isSellOpen, selectedSymbol, currentShares, livePrices]);
+
+  const handleSell = () => {
+    if (!selectedSymbol) return;
+    const shares = parseFloat(sellShares.toString());
+    const price = parseFloat(sellPrice.toString());
+    if (isNaN(shares) || isNaN(price) || shares <= 0 || price < 0) return;
+
+    addTransaction({
+      id: Math.random().toString(36).substring(7),
+      symbol: selectedSymbol,
+      date: new Date().toISOString().split('T')[0],
+      type: "SELL",
+      price: price,
+      shares: shares,
+      fees: 0,
+      assetClass: "Stock",
+      createdAt: new Date().toISOString()
+    });
+    setIsSellOpen(false);
+  };
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -77,11 +130,77 @@ export function StockDetailSheet({
   return (
     <DetailSheet
       open={selectedSymbol !== null}
-      onOpenChange={(v) => !v && setSelectedSymbol(null)}
+      onOpenChange={(v) => {
+        if (!v) {
+          setSelectedSymbol(null);
+          setIsSellOpen(false);
+        }
+      }}
       eyebrow="Stock Performance"
-      title={selectedSymbol ? `${selectedSymbol} ${livePrices?.[selectedSymbol]?.longName ? `— ${livePrices[selectedSymbol].longName}` : ''}` : ""}
+      title={
+        selectedSymbol ? (
+          <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3">
+            <span>{selectedSymbol} {livePrices?.[selectedSymbol]?.longName ? `— ${livePrices[selectedSymbol].longName}` : ''}</span>
+            {livePrices?.[selectedSymbol]?.price !== undefined && (
+              <span className="flex items-center gap-2 text-lg mt-1 sm:mt-0 font-medium">
+                <span>${livePrices[selectedSymbol].price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                {livePrices[selectedSymbol].previousClose !== undefined && livePrices[selectedSymbol].previousClose > 0 && (
+                  (() => {
+                    const price = livePrices[selectedSymbol].price;
+                    const prev = livePrices[selectedSymbol].previousClose;
+                    const diff = price - prev;
+                    const pct = (diff / prev) * 100;
+                    return (
+                      <span className={`text-sm ${diff >= 0 ? "text-positive" : "text-negative"}`}>
+                        {diff >= 0 ? "+" : ""}{diff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({diff >= 0 ? "+" : ""}{pct.toFixed(2)}%)
+                      </span>
+                    );
+                  })()
+                )}
+              </span>
+            )}
+          </div>
+        ) : ""
+      }
       description="Historical value of your position from inception."
     >
+      <div className="absolute top-4 right-10">
+        <Dialog open={isSellOpen} onOpenChange={setIsSellOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" variant="destructive" className="h-8">Sell Position</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Sell {selectedSymbol}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Shares to Sell</Label>
+                <Input 
+                  type="number" 
+                  value={sellShares} 
+                  onChange={(e) => setSellShares(e.target.value)}
+                  max={currentShares}
+                />
+                <p className="text-xs text-muted-foreground">You own {currentShares} shares</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Price per Share ($)</Label>
+                <Input 
+                  type="number" 
+                  step="0.01"
+                  value={sellPrice} 
+                  onChange={(e) => setSellPrice(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsSellOpen(false)}>Cancel</Button>
+              <Button onClick={handleSell}>Confirm Sale</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
       <div className="px-4 pt-4 sm:px-6">
          {positionMetrics && returnPercentage !== undefined && (
             <div className="flex flex-wrap gap-6 mb-2 border-b border-border pb-4">

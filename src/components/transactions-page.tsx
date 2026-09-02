@@ -5,7 +5,7 @@ import { calculateAdvancedMetrics } from "@/lib/calculations";
 import type { PortfolioPosition } from "@/types";
 
 export function TransactionsPage({ positions }: { positions: PortfolioPosition[] }) {
-  const { transactions, livePrices, startDate } = usePortfolio();
+  const { transactions, livePrices, startDate, deleteTransaction } = usePortfolio();
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
 
   const sortedTransactions = React.useMemo(() => {
@@ -63,6 +63,15 @@ export function TransactionsPage({ positions }: { positions: PortfolioPosition[]
                     </span>
                     <p className="text-xs font-semibold mt-1.5">{tx.shares} @ ${tx.price.toFixed(2)}</p>
                  </div>
+                 <button 
+                   onClick={(e) => {
+                     e.stopPropagation();
+                     deleteTransaction(tx.id);
+                   }} 
+                   className="text-muted-foreground hover:text-negative text-xs ml-2 shrink-0 p-2"
+                 >
+                   Del
+                 </button>
                </div>
              </div>
            ))}

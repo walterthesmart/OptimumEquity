@@ -17,7 +17,7 @@ export function DetailSheet({
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  title: string;
+  title: ReactNode;
   eyebrow?: string;
   description?: string;
   children: ReactNode;

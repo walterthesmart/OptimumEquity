@@ -7,6 +7,8 @@ async function fetchQuoteWithFallback(symbol: string) {
   let lastError;
   try { 
     const quote = await yahooFinance.quote(symbol); 
+    if (!quote) throw new Error(`Yahoo Finance returned undefined quote for ${symbol}`);
+    
     return { 
       price: quote.regularMarketPrice, 
       previousClose: quote.regularMarketPreviousClose, 
@@ -42,6 +44,8 @@ async function fetchHistoricalWithFallback(symbol: string, startDate: string) {
   let lastError;
   try {
      const histData = await yahooFinance.historical(symbol, { period1: startDate, period2: new Date(), interval: '1d' });
+     if (!histData) throw new Error(`Yahoo Finance returned undefined historical data for ${symbol}`);
+     
      return histData.map((d: any) => ({
        date: d.date.toISOString().split('T')[0],
        close: d.close,

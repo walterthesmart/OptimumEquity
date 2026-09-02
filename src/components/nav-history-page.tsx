@@ -1,6 +1,9 @@
 import { useMemo } from "react";
 import { usePortfolio } from "@/context/PortfolioContext";
 import { calculateHistoricalNAV } from "@/lib/calculations";
+import Papa from "papaparse";
+import { Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -17,10 +20,33 @@ export function NavHistoryPage() {
     return calculateHistoricalNAV(transactions, livePrices).reverse(); // Reverse to show latest first
   }, [transactions, livePrices]);
 
+  const handleDownload = () => {
+    const csv = Papa.unparse(history.map(row => ({
+      Date: row.date,
+      "Net Assets": row.netAssets,
+      "Shares Outstanding": row.sharesOutstanding,
+      "NAV": row.nav,
+      "Daily Return": row.dailyReturn,
+      "Total Return": row.totalReturn,
+    })));
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'historical-nav.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="surface rounded-lg border border-border bg-card overflow-hidden">
       <div className="border-b border-border p-4 sm:px-6 py-4 flex items-center justify-between">
         <h3 className="font-semibold tracking-tight text-lg">Historical NAV</h3>
+        <Button variant="outline" size="sm" onClick={handleDownload} className="gap-2">
+          <Download className="w-4 h-4" />
+          Download CSV
+        </Button>
       </div>
       <div className="overflow-x-auto">
         <Table>

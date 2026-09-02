@@ -25,7 +25,7 @@ interface PortfolioContextType {
 const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
 
 export function PortfolioProvider({ children }: { children: ReactNode }) {
-  const [transactions] = useState<Transaction[]>(initialTransactions as Transaction[]);
+  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions as Transaction[]);
   const [fetchedPrices, setFetchedPrices] = useState<Record<string, PriceData>>({});
   const [customPrices, setCustomPrices] = useState<Record<string, number>>({});
   const [isLoadingPrices, setIsLoadingPrices] = useState(false);
@@ -87,11 +87,17 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     }
   }, [transactions, isInitialized, refreshPrices]);
 
-  // Read-only implementation - disable modifications
-  const addTransaction = async (tx: Transaction) => {};
+  // Local state modification
+  const addTransaction = async (tx: Transaction) => {
+    setTransactions((prev) => [...prev, tx]);
+  };
   const importTransactions = async (txs: Transaction[]) => {};
-  const deleteTransaction = async (id: string) => {};
-  const clearTransactions = async () => {};
+  const deleteTransaction = async (id: string) => {
+    setTransactions((prev) => prev.filter(tx => tx.id !== id));
+  };
+  const clearTransactions = async () => {
+    setTransactions([]);
+  };
 
   const updateCustomPrice = (symbol: string, price: number | null) => {
     setCustomPrices((prev) => {
