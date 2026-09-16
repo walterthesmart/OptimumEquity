@@ -12,4 +12,7 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
-});
+  // Override the lovable default to target Vercel Node serverless functions
+  // which are required to run Prisma standard database drivers.
+  nitro: { preset: 'vercel' }
+} as any);
