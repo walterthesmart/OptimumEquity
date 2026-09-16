@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import YahooFinance from 'yahoo-finance2';
-const yahooFinance = new YahooFinance();
+const yahooFinance = new YahooFinance({ validation: { logErrors: false } });
 import { z } from "zod";
 
 async function fetchQuoteWithFallback(symbol: string) {

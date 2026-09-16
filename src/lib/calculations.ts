@@ -325,12 +325,32 @@ export function calculateAdvancedMetrics(
   }
 
   try {
-    const twrResult = calculateTimeWeightedReturn({
-      portfolioValues,
-      cashFlows: twrCashFlows,
-      annualizationFactor: 1,
-    });
-    twr = (twrResult.twr || 0) * 100;
+    const sanitizedPortfolioValues = [...portfolioValues];
+    const sanitizedTwrCashFlows = [...twrCashFlows];
+
+    // Finance-toolkit's Zod schema requires portfolioValues > 0 and 
+    // the TWR math requires (previousValue + cashFlow) > 0.
+    for (let i = 0; i < sanitizedPortfolioValues.length; i++) {
+      if (sanitizedPortfolioValues[i] <= 0.01) {
+        sanitizedPortfolioValues[i] = 0.01;
+      }
+      if (i > 0) {
+        const prevVal = sanitizedPortfolioValues[i - 1];
+        const cf = sanitizedTwrCashFlows[i];
+        if (prevVal + cf <= 0.01) {
+          sanitizedTwrCashFlows[i] = 0.01 - prevVal;
+        }
+      }
+    }
+
+    if (sanitizedPortfolioValues.length >= 2) {
+      const twrResult = calculateTimeWeightedReturn({
+        portfolioValues: sanitizedPortfolioValues,
+        cashFlows: sanitizedTwrCashFlows,
+        annualizationFactor: 1,
+      });
+      twr = (twrResult.twr || 0) * 100;
+    }
   } catch (e) {
     console.warn("TWR failed:", e);
   }

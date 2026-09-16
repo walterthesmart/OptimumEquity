@@ -1,7 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
 import type { Transaction, PriceData } from '../types';
 import { getPrices } from '../actions/prices';
-import initialTransactions from '../data/transactions.json';
+import { 
+  getTransactions, 
+  addTransaction as apiAddTransaction, 
+  removeTransaction as apiRemoveTransaction, 
+  clearAllTransactions as apiClearAllTransactions,
+  addBulkTransactions as apiAddBulkTransactions
+} from '../actions/transactions';
 
 interface PortfolioContextType {
   transactions: Transaction[];
@@ -25,7 +31,7 @@ interface PortfolioContextType {
 const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
 
 export function PortfolioProvider({ children }: { children: ReactNode }) {
-  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions as Transaction[]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [fetchedPrices, setFetchedPrices] = useState<Record<string, PriceData>>({});
   const [customPrices, setCustomPrices] = useState<Record<string, number>>({});
   const [isLoadingPrices, setIsLoadingPrices] = useState(false);
@@ -44,6 +50,16 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         console.error('Failed to parse saved custom prices');
       }
     }
+    
+    // Fetch initial transactions from DB
+    console.log("Fetching transactions from DB...");
+    getTransactions().then(res => {
+      console.log("DB response in frontend:", res);
+      if (res.data) {
+        setTransactions(res.data);
+      }
+    }).catch(e => console.error("Failed to load initial transactions", e));
+
     setIsInitialized(true);
   }, []);
 
@@ -87,16 +103,54 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     }
   }, [transactions, isInitialized, refreshPrices]);
 
-  // Local state modification
+  // Database state modification
   const addTransaction = async (tx: Transaction) => {
-    setTransactions((prev) => [...prev, tx]);
+    try {
+      const res = await apiAddTransaction({ data: tx });
+      if (res.data) {
+        setTransactions((prev) => [...prev, res.data as Transaction]);
+      } else {
+        console.error(res.error);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
-  const importTransactions = async (txs: Transaction[]) => {};
+  
+  const importTransactions = async (txs: Transaction[]) => {
+    try {
+      const res = await apiAddBulkTransactions({ data: txs });
+      if (res.data) {
+        const fresh = await getTransactions();
+        if (fresh.data) {
+          setTransactions(fresh.data);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+  
   const deleteTransaction = async (id: string) => {
-    setTransactions((prev) => prev.filter(tx => tx.id !== id));
+    try {
+      const res = await apiRemoveTransaction({ data: { id } });
+      if (res.success) {
+        setTransactions((prev) => prev.filter(tx => tx.id !== id));
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
+  
   const clearTransactions = async () => {
-    setTransactions([]);
+    try {
+      const res = await apiClearAllTransactions();
+      if (res.success) {
+        setTransactions([]);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const updateCustomPrice = (symbol: string, price: number | null) => {

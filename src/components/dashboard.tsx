@@ -177,6 +177,16 @@ export function Dashboard() {
   return (
     <AppShell active={section} onChange={setSection} date={date}>
       <div className="mx-auto w-full max-w-7xl space-y-4">
+        <div className="flex items-center justify-between pb-2">
+          <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
+          <button 
+            onClick={() => setModal("transactions")}
+            className="flex items-center gap-2 px-4 py-2 bg-mint text-primary-foreground font-medium rounded-md shadow-sm hover:bg-mint/90 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Buy Equities
+          </button>
+        </div>
         {summary}
         {mainView}
       </div>

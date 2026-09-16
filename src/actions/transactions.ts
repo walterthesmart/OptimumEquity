@@ -18,10 +18,12 @@ const bulkTransactionSchema = z.array(transactionSchema);
 
 export const getTransactions = createServerFn({ method: "GET" })
   .handler(async () => {
+    console.log("Backend: getTransactions called");
     try {
       const transactions = await prisma.transaction.findMany({
         orderBy: { date: 'asc' },
       });
+      console.log(`Backend: found ${transactions.length} transactions`);
       return { data: transactions as Transaction[] };
     } catch (error) {
       console.error('Failed to fetch transactions:', error);
