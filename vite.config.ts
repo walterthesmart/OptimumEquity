@@ -19,5 +19,8 @@ export default defineConfig({
     externals: {
       inline: ['tslib']
     }
+  },
+  ssr: {
+    noExternal: ['tslib']
   }
 } as any);

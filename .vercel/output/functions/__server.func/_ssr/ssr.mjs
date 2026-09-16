@@ -61,7 +61,7 @@ function consumeLastCapturedError() {
 	lastCapturedError = void 0;
 	return error;
 }
-function renderErrorPage() {
+function renderErrorPage(errorMsg) {
 	return `<!doctype html>
 <html lang="en">
   <head>
@@ -77,6 +77,7 @@ function renderErrorPage() {
       a, button { padding: 0.5rem 1rem; border-radius: 0.375rem; font: inherit; cursor: pointer; text-decoration: none; border: 1px solid transparent; }
       .primary { background: #111; color: #fff; }
       .secondary { background: #fff; color: #111; border-color: #d1d5db; }
+      pre { text-align: left; background: #f3f4f6; padding: 1rem; border-radius: 0.375rem; overflow-x: auto; font-size: 0.875rem; color: #ef4444; margin-top: 1.5rem; }
     </style>
   </head>
   <body>
@@ -87,6 +88,7 @@ function renderErrorPage() {
         <button class="primary" onclick="location.reload()">Try again</button>
         <a class="secondary" href="/">Go home</a>
       </div>
+      ${errorMsg ? `<pre>${errorMsg.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>` : ""}
     </div>
   </body>
 </html>`;
@@ -101,8 +103,10 @@ async function normalizeCatastrophicSsrResponse(response) {
 	if (!(response.headers.get("content-type") ?? "").includes("application/json")) return response;
 	const body = await response.clone().text();
 	if (!isH3SwallowedErrorBody(body)) return response;
-	console.error(consumeLastCapturedError() ?? /* @__PURE__ */ new Error(`h3 swallowed SSR error: ${body}`));
-	return new Response(renderErrorPage(), {
+	const captured = consumeLastCapturedError();
+	const errMsg = captured instanceof Error ? `${captured.name}: ${captured.message}\n${captured.stack}` : captured ? String(captured) : `h3 swallowed SSR error: ${body}`;
+	console.error(captured ?? /* @__PURE__ */ new Error(`h3 swallowed SSR error: ${body}`));
+	return new Response(renderErrorPage(errMsg), {
 		status: 500,
 		headers: { "content-type": "text/html; charset=utf-8" }
 	});
@@ -120,7 +124,8 @@ var server_default = { async fetch(request, env, ctx) {
 		return await normalizeCatastrophicSsrResponse(await (await getServerEntry()).fetch(request, env, ctx));
 	} catch (error) {
 		console.error(error);
-		return new Response(renderErrorPage(), {
+		const errMsg = error instanceof Error ? `${error.name}: ${error.message}\n${error.stack}` : String(error);
+		return new Response(renderErrorPage(errMsg), {
 			status: 500,
 			headers: { "content-type": "text/html; charset=utf-8" }
 		});
