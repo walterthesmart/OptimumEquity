@@ -16,11 +16,6 @@ export default defineConfig({
   // which are required to run Prisma standard database drivers.
   nitro: { 
     preset: 'vercel',
-    externals: {
-      inline: ['tslib']
-    }
+    noExternals: ['tslib'],
   },
-  ssr: {
-    noExternal: ['tslib']
-  }
 } as any);
