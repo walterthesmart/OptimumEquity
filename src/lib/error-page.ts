@@ -1,4 +1,4 @@
-export function renderErrorPage(): string {
+export function renderErrorPage(errorMsg?: string): string {
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -14,6 +14,7 @@ export function renderErrorPage(): string {
       a, button { padding: 0.5rem 1rem; border-radius: 0.375rem; font: inherit; cursor: pointer; text-decoration: none; border: 1px solid transparent; }
       .primary { background: #111; color: #fff; }
       .secondary { background: #fff; color: #111; border-color: #d1d5db; }
+      pre { text-align: left; background: #f3f4f6; padding: 1rem; border-radius: 0.375rem; overflow-x: auto; font-size: 0.875rem; color: #ef4444; margin-top: 1.5rem; }
     </style>
   </head>
   <body>
@@ -24,6 +25,7 @@ export function renderErrorPage(): string {
         <button class="primary" onclick="location.reload()">Try again</button>
         <a class="secondary" href="/">Go home</a>
       </div>
+      ${errorMsg ? `<pre>${errorMsg.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>` : ''}
     </div>
   </body>
 </html>`;

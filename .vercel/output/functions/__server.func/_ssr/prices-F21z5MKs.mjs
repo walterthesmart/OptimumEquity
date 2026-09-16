@@ -1,13 +1,12 @@
-import { r as createServerFn } from "./server-kqd0nYar.mjs";
-import { t as createServerRpc } from "./createServerRpc-D49bnOyn.mjs";
+import { r as createServerFn } from "./server-DiRP4YEU.mjs";
+import { t as createServerRpc } from "./createServerRpc-B1r-8S0j.mjs";
 import { t as YahooFinance } from "../_libs/yahoo-finance2.mjs";
 import { a as stringType, i as objectType, t as arrayType } from "../_libs/zod.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/prices-27CuSYwc.js
-var yahooFinance = new YahooFinance({ validation: { logErrors: false } });
+//#region node_modules/.nitro/vite/services/ssr/assets/prices-F21z5MKs.js
 async function fetchQuoteWithFallback(symbol) {
 	let lastError;
 	try {
-		const quote = await yahooFinance.quote(symbol);
+		const quote = await YahooFinance.quote(symbol);
 		if (!quote) throw new Error(`Yahoo Finance returned undefined quote for ${symbol}`);
 		return {
 			price: quote.regularMarketPrice,
@@ -40,7 +39,7 @@ async function fetchQuoteWithFallback(symbol) {
 }
 async function fetchHistoricalWithFallback(symbol, startDate) {
 	try {
-		const histData = await yahooFinance.historical(symbol, {
+		const histData = await YahooFinance.historical(symbol, {
 			period1: startDate,
 			period2: /* @__PURE__ */ new Date(),
 			interval: "1d"
