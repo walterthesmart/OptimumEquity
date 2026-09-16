@@ -2,13 +2,17 @@ import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
+let dbUrl = process.env.DATABASE_URL;
+if (dbUrl && dbUrl.includes('pooled.db.prisma.io') && !dbUrl.includes('pgbouncer=true')) {
+  dbUrl += (dbUrl.includes('?') ? '&' : '?') + 'pgbouncer=true';
+}
+
 export const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({
     log: ['query'],
     datasources: {
-      // Prisma will automatically read process.env.DATABASE_URL
-      // If it's missing, it will use the generated default.
+      ...(dbUrl ? { db: { url: dbUrl } } : {})
     },
   });
 
