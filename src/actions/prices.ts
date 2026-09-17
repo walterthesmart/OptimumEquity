@@ -1,11 +1,14 @@
-import { createServerFn } from "@tanstack/react-start";
-import yahooFinance from 'yahoo-finance2';
+"use server";
+
+import YahooFinance from 'yahoo-finance2';
 import { z } from "zod";
+
+const yahooFinance = new YahooFinance();
 
 async function fetchQuoteWithFallback(symbol: string) {
   let lastError;
   try { 
-    const quote = await yahooFinance.quote(symbol); 
+    const quote = (await yahooFinance.quote(symbol)) as any; 
     if (!quote) throw new Error(`Yahoo Finance returned undefined quote for ${symbol}`);
     
     return { 
@@ -42,7 +45,7 @@ async function fetchQuoteWithFallback(symbol: string) {
 async function fetchHistoricalWithFallback(symbol: string, startDate: string) {
   let lastError;
   try {
-     const histData = await yahooFinance.historical(symbol, { period1: startDate, period2: new Date(), interval: '1d' });
+     const histData = (await yahooFinance.historical(symbol, { period1: startDate, period2: new Date(), interval: '1d' })) as any;
      if (!histData) throw new Error(`Yahoo Finance returned undefined historical data for ${symbol}`);
      
      return histData.map((d: any) => ({
@@ -76,49 +79,48 @@ const pricesSchema = z.object({
   startDate: z.string().optional()
 });
 
-export const getPrices = createServerFn({ method: "POST" })
-  .validator(pricesSchema)
-  .handler(async ({ data: { symbols, startDate } }) => {
-    try {
-      const uniqueSymbols = Array.from(new Set(symbols));
-      const results: Record<string, any> = {};
+export async function getPrices(input: { symbols: string[], startDate?: string }) {
+  try {
+    const { symbols, startDate } = pricesSchema.parse(input);
+    const uniqueSymbols = Array.from(new Set(symbols));
+    const results: Record<string, any> = {};
 
-      const fetchPromises = uniqueSymbols.map(async (symbol) => {
-        try {
-          const quote = await fetchQuoteWithFallback(symbol);
-          
-          let historical: any[] = [];
-          if (startDate) {
-            historical = await fetchHistoricalWithFallback(symbol, startDate);
+    const fetchPromises = uniqueSymbols.map(async (symbol) => {
+      try {
+        const quote = await fetchQuoteWithFallback(symbol);
+        
+        let historical: any[] = [];
+        if (startDate) {
+          historical = await fetchHistoricalWithFallback(symbol, startDate);
+        }
+
+        return {
+          symbol,
+          success: true,
+          data: {
+            ...quote,
+            historical,
           }
+        };
+      } catch (err) {
+        console.warn(`[API] Failed to fetch quote for ${symbol}: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        return { symbol, success: false, data: null };
+      }
+    });
 
-          return {
-            symbol,
-            success: true,
-            data: {
-              ...quote,
-              historical,
-            }
-          };
-        } catch (err) {
-          console.error(`Failed to fetch quote for ${symbol}:`, err);
-          return { symbol, success: false, data: null };
-        }
-      });
+    const settled = await Promise.all(fetchPromises);
+    
+    settled.forEach((res) => {
+      if (res.success) {
+        results[res.symbol] = res.data;
+      } else {
+        results[res.symbol] = null;
+      }
+    });
 
-      const settled = await Promise.all(fetchPromises);
-      
-      settled.forEach((res) => {
-        if (res.success) {
-          results[res.symbol] = res.data;
-        } else {
-          results[res.symbol] = null;
-        }
-      });
-
-      return { data: results };
-    } catch (error) {
-      console.error('API /prices error:', error);
-      return { error: 'Failed to fetch prices' };
-    }
-  });
+    return { data: results };
+  } catch (error) {
+    console.error('API /prices error:', error);
+    return { error: 'Failed to fetch prices' };
+  }
+}

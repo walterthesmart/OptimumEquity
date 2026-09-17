@@ -84,7 +84,7 @@ export function TransactionsPage({ positions }: { positions: PortfolioPosition[]
         transactions={transactions || []}
         livePrices={livePrices}
         positionMetrics={selectedSymbol ? positionMetrics[selectedSymbol] : undefined}
-        totalReturn={selectedSymbol ? positions.find(p => p.symbol === selectedSymbol)?.totalReturn : undefined}
+        returnAmount={selectedSymbol ? positions.find(p => p.symbol === selectedSymbol)?.returnAmount : undefined}
         returnPercentage={selectedSymbol ? positions.find(p => p.symbol === selectedSymbol)?.returnPercentage : undefined}
       />
     </div>

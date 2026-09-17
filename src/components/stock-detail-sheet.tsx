@@ -20,7 +20,7 @@ interface StockDetailSheetProps {
   transactions: any[];
   livePrices: any;
   positionMetrics?: { twr: number; mwr: number };
-  totalReturn?: number;
+  returnAmount?: number;
   returnPercentage?: number;
 }
 
@@ -30,7 +30,7 @@ export function StockDetailSheet({
   transactions,
   livePrices,
   positionMetrics,
-  totalReturn,
+  returnAmount,
   returnPercentage
 }: StockDetailSheetProps) {
   const { addTransaction } = usePortfolio();
@@ -107,8 +107,7 @@ export function StockDetailSheet({
       price: price,
       shares: shares,
       fees: 0,
-      assetClass: "Stock",
-      createdAt: new Date().toISOString()
+      assetClass: "Stock"
     });
     setIsSellOpen(false);
   };
@@ -208,7 +207,7 @@ export function StockDetailSheet({
                   <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">Total Return</p>
                   <p className={`font-semibold ${returnPercentage >= 0 ? "text-positive" : "text-negative"}`}>
                      {returnPercentage >= 0 ? '+' : ''}{returnPercentage.toFixed(2)}% 
-                     {totalReturn !== undefined && ` ($${Math.abs(totalReturn).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`}
+                     {returnAmount !== undefined && ` ($${Math.abs(returnAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`}
                   </p>
                </div>
                <div>

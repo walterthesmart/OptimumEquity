@@ -38,3 +38,9 @@ dist-ssr
 
 # Copies and backups
 copy/
+
+# Next.js
+.next
+out
+build
+node_modules*
