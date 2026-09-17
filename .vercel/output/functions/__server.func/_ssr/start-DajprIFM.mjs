@@ -1,5 +1,5 @@
 import { n as createMiddleware, t as createCsrfMiddleware } from "./createCsrfMiddleware-B2To0gPJ.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/start-DSefzkxJ.js
+//#region node_modules/.nitro/vite/services/ssr/assets/start-DajprIFM.js
 function dedupeSerializationAdapters(deduped, serializationAdapters) {
 	for (let i = 0, len = serializationAdapters.length; i < len; i++) {
 		const current = serializationAdapters[i];
@@ -59,8 +59,8 @@ var errorMiddleware = createMiddleware().server(async ({ next }) => {
 	try {
 		return await next();
 	} catch (error) {
+		console.error("ERROR CAUGHT IN MIDDLEWARE:", error);
 		if (error != null && typeof error === "object" && "statusCode" in error) throw error;
-		console.error(error);
 		return new Response(renderErrorPage(), {
 			status: 500,
 			headers: { "content-type": "text/html; charset=utf-8" }

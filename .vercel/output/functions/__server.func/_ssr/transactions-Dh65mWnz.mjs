@@ -1,18 +1,7 @@
 import { n as createServerFn } from "./ssr.mjs";
-import { t as createServerRpc } from "./createServerRpc-A6pJPYTF.mjs";
+import { n as prisma, t as createServerRpc } from "./prisma-PkHBFGjN.mjs";
 import { a as stringType, i as objectType, n as enumType, r as numberType, t as arrayType } from "../_libs/zod.mjs";
-import { PrismaClient } from "@prisma/client";
-//#region node_modules/.nitro/vite/services/ssr/assets/transactions-BLwuCDvG.js
-var globalForPrisma = global;
-var dbUrl = process.env.DATABASE_URL || "postgres://3311796110bf58f00e928c02c0de98ab4db04718cb8f8637386d5e6a312ab05e:sk_Sltno9O7WdfN2Co_FsVLM@pooled.db.prisma.io:5432/postgres?sslmode=require";
-if (dbUrl && dbUrl.includes("pooled.db.prisma.io") && !dbUrl.includes("pgbouncer=true")) dbUrl += (dbUrl.includes("?") ? "&" : "?") + "pgbouncer=true";
-var prisma = new Proxy({}, { get(target, prop) {
-	if (!globalForPrisma.prisma) globalForPrisma.prisma = new PrismaClient({
-		log: ["query"],
-		datasources: { ...dbUrl ? { db: { url: dbUrl } } : {} }
-	});
-	return globalForPrisma.prisma[prop];
-} });
+//#region node_modules/.nitro/vite/services/ssr/assets/transactions-Dh65mWnz.js
 var transactionSchema = objectType({
 	id: stringType().optional(),
 	symbol: stringType().min(1),

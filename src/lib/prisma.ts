@@ -9,18 +9,11 @@ if (dbUrl && dbUrl.includes('pooled.db.prisma.io') && !dbUrl.includes('pgbouncer
   dbUrl += (dbUrl.includes('?') ? '&' : '?') + 'pgbouncer=true';
 }
 
-export const prisma = new Proxy({} as PrismaClient, {
-  get(target, prop) {
-    if (!globalForPrisma.prisma) {
-      globalForPrisma.prisma = new PrismaClient({
-        log: ['query'],
-        datasources: {
-          ...(dbUrl ? { db: { url: dbUrl } } : {})
-        },
-      });
-    }
-    return (globalForPrisma.prisma as any)[prop];
-  }
+export const prisma = globalForPrisma.prisma || new PrismaClient({
+  log: ['query'],
+  datasources: {
+    ...(dbUrl ? { db: { url: dbUrl } } : {})
+  },
 });
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;

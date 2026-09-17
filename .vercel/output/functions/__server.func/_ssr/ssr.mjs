@@ -112,27 +112,27 @@ async function getStartManifest(matchedRoutes) {
 var manifest = {
 	"151d5f887164f12a5104ed755372be3d1cff2bc07054f741c838712a4145d455": {
 		functionName: "getPrices_createServerFn_handler",
-		importer: () => import("./prices-B4G7jnvK.mjs")
+		importer: () => import("./prices-BBgojZWU.mjs")
 	},
 	"691cf5e7844d155df9f44c3e710a9bb532b1c83e5767a25446aa607266c8e177": {
 		functionName: "addTransaction_createServerFn_handler",
-		importer: () => import("./transactions-BLwuCDvG.mjs")
+		importer: () => import("./transactions-Dh65mWnz.mjs")
 	},
 	"9a966739e901e4ddb39b77c07b5763a8785427097d9806c3810977a2d5e8439f": {
 		functionName: "clearAllTransactions_createServerFn_handler",
-		importer: () => import("./transactions-BLwuCDvG.mjs")
+		importer: () => import("./transactions-Dh65mWnz.mjs")
 	},
 	"ab5b10726cc79cbc44a1f3cb98037f59781102c40b6c9d9f4dbf35296bf368af": {
 		functionName: "removeTransaction_createServerFn_handler",
-		importer: () => import("./transactions-BLwuCDvG.mjs")
+		importer: () => import("./transactions-Dh65mWnz.mjs")
 	},
 	"c392bddaba2f7d944f5d30dca9b4ec590a291ca19ae312efbd9237e7cbb2ede2": {
 		functionName: "getTransactions_createServerFn_handler",
-		importer: () => import("./transactions-BLwuCDvG.mjs")
+		importer: () => import("./transactions-Dh65mWnz.mjs")
 	},
 	"f3ccd206433bf9600d92ad0584bf98b65bba2c8e7c41f6e350d0bf5d930fee26": {
 		functionName: "addBulkTransactions_createServerFn_handler",
-		importer: () => import("./transactions-BLwuCDvG.mjs")
+		importer: () => import("./transactions-Dh65mWnz.mjs")
 	}
 };
 async function getServerFnById(id, access) {
@@ -1324,7 +1324,7 @@ var createEarlyHintsForRequest = createEarlyHintsCollector;
 async function loadEntries() {
 	const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
 		import("./router-BO2PtEFM.mjs").then((n) => n.t),
-		import("./start-DSefzkxJ.mjs"),
+		import("./start-DajprIFM.mjs"),
 		import("./empty-plugin-adapters-D9UWiqvJ.mjs")
 	]);
 	return {

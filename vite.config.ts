@@ -9,12 +9,16 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     tanstackStart({
-      appDirectory: 'src'
+      appDirectory: 'src',
+      server: {
+        entry: './src/server.ts'
+      }
     }),
     nitro({ 
       preset: 'vercel',
       noExternals: ['tslib']
     }),
+
     react(),
     tsconfigPaths()
   ],
