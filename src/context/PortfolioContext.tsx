@@ -30,8 +30,8 @@ interface PortfolioContextType {
 
 const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
 
-export function PortfolioProvider({ children }: { children: ReactNode }) {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+export function PortfolioProvider({ children, initialTransactions = [] }: { children: ReactNode, initialTransactions?: Transaction[] }) {
+  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [fetchedPrices, setFetchedPrices] = useState<Record<string, PriceData>>({});
   const [customPrices, setCustomPrices] = useState<Record<string, number>>({});
   const [isLoadingPrices, setIsLoadingPrices] = useState(false);
@@ -51,15 +51,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       }
     }
     
-    // Fetch initial transactions from DB
-    console.log("Fetching transactions from DB...");
-    getTransactions().then(res => {
-      console.log("DB response in frontend:", res);
-      if (res.data) {
-        setTransactions(res.data);
-      }
-    }).catch(e => console.error("Failed to load initial transactions", e));
-
+    // Transactions are now passed in via initialTransactions from the route loader
     setIsInitialized(true);
   }, []);
 
@@ -70,8 +62,23 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   }, [customPrices, isInitialized]);
 
   const refreshPrices = useCallback(async () => {
-    const rawSymbols = Array.from(new Set(transactions.map((t) => t.symbol)));
-    const symbols = rawSymbols.filter(s => s !== 'GEF Cash' && s !== 'Cash');
+    // Only fetch prices for current holdings (net shares > 0) to avoid rate limits
+    const holdings: Record<string, number> = {};
+    transactions.forEach(tx => {
+      if (tx.symbol !== 'GEF Cash' && tx.symbol !== 'Cash') {
+        if (tx.type === 'BUY') {
+          holdings[tx.symbol] = (holdings[tx.symbol] || 0) + tx.shares;
+        } else if (tx.type === 'SELL') {
+          holdings[tx.symbol] = (holdings[tx.symbol] || 0) - tx.shares;
+        }
+      }
+    });
+    
+    const activeSymbols = Object.entries(holdings)
+      .filter(([_, shares]) => shares > 0.000001)
+      .map(([sym]) => sym);
+      
+    const symbols = Array.from(new Set(activeSymbols));
     if (!symbols.includes('URTH')) symbols.push('URTH');
     if (symbols.length === 0) return;
 

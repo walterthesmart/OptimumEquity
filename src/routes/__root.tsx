@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { PortfolioProvider } from "../context/PortfolioContext";
+import { getTransactions } from "../actions/transactions";
 
 function NotFoundComponent() {
   return (
@@ -102,6 +103,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>" },
     ],
   }),
+  loader: async () => {
+    const res = await getTransactions();
+    return { initialTransactions: res.data || [] };
+  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -124,10 +129,11 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const { initialTransactions } = Route.useLoaderData();
 
   return (
     <QueryClientProvider client={queryClient}>
-      <PortfolioProvider>
+      <PortfolioProvider initialTransactions={initialTransactions}>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
       </PortfolioProvider>
