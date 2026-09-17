@@ -252,7 +252,7 @@ export function PositionsPanel({
          transactions={transactions || []}
          livePrices={livePrices}
          positionMetrics={selectedSymbol ? positionMetrics[selectedSymbol] : undefined}
-         returnAmount={selectedSymbol ? positions.find(p => p.symbol === selectedSymbol)?.returnAmount : undefined}
+         totalReturn={selectedSymbol ? positions.find(p => p.symbol === selectedSymbol)?.totalReturn : undefined}
          returnPercentage={selectedSymbol ? positions.find(p => p.symbol === selectedSymbol)?.returnPercentage : undefined}
        />
      </section>

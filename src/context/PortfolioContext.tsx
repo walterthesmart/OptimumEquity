@@ -86,7 +86,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const res = await getPrices({ symbols, startDate: earliestDate });
+      const res = await getPrices({ data: { symbols, startDate: earliestDate } });
       if (res.data) {
         setFetchedPrices(res.data);
       }
@@ -106,7 +106,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   // Database state modification
   const addTransaction = async (tx: Transaction) => {
     try {
-      const res = await apiAddTransaction(tx);
+      const res = await apiAddTransaction({ data: tx });
       if (res.data) {
         setTransactions((prev) => [...prev, res.data as Transaction]);
       } else {
@@ -119,7 +119,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   
   const importTransactions = async (txs: Transaction[]) => {
     try {
-      const res = await apiAddBulkTransactions(txs);
+      const res = await apiAddBulkTransactions({ data: txs });
       if (res.data) {
         const fresh = await getTransactions();
         if (fresh.data) {
@@ -133,7 +133,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   
   const deleteTransaction = async (id: string) => {
     try {
-      const res = await apiRemoveTransaction({ id });
+      const res = await apiRemoveTransaction({ data: { id } });
       if (res.success) {
         setTransactions((prev) => prev.filter(tx => tx.id !== id));
       }

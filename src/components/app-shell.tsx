@@ -1,6 +1,5 @@
-"use client";
-
 import { type ReactNode, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import {
   Activity,
   AlertTriangle,

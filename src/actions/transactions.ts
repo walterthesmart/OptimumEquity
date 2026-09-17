@@ -1,5 +1,4 @@
-"use server";
-
+import { createServerFn } from "@tanstack/react-start";
 import { prisma } from "../lib/prisma";
 import type { Transaction, PriceData } from "../types";
 import { z } from "zod";
@@ -17,61 +16,66 @@ const transactionSchema = z.object({
 
 const bulkTransactionSchema = z.array(transactionSchema);
 
-export async function getTransactions() {
-  console.log("Backend: getTransactions called");
-  try {
-    const transactions = await prisma.transaction.findMany({
-      orderBy: { date: 'asc' },
-    });
-    console.log(`Backend: found ${transactions.length} transactions`);
-    return { data: transactions as Transaction[] };
-  } catch (error) {
-    console.error('Failed to fetch transactions:', error);
-    return { error: 'Internal server error' };
-  }
-}
+export const getTransactions = createServerFn({ method: "GET" })
+  .handler(async () => {
+    console.log("Backend: getTransactions called");
+    try {
+      const transactions = await prisma.transaction.findMany({
+        orderBy: { date: 'asc' },
+      });
+      console.log(`Backend: found ${transactions.length} transactions`);
+      return { data: transactions as Transaction[] };
+    } catch (error) {
+      console.error('Failed to fetch transactions:', error);
+      return { error: 'Internal server error' };
+    }
+  });
 
-export async function addTransaction(input: any) {
-  try {
-    const data = transactionSchema.parse(input);
-    const tx = await prisma.transaction.create({ data });
-    return { data: tx as Transaction };
-  } catch (error) {
-    console.error('Failed to create transaction:', error);
-    return { error: 'Internal server error' };
-  }
-}
+export const addTransaction = createServerFn({ method: "POST" })
+  .validator(transactionSchema)
+  .handler(async ({ data }) => {
+    try {
+      const tx = await prisma.transaction.create({ data });
+      return { data: tx as Transaction };
+    } catch (error) {
+      console.error('Failed to create transaction:', error);
+      return { error: 'Internal server error' };
+    }
+  });
 
-export async function addBulkTransactions(input: any) {
-  try {
-    const data = bulkTransactionSchema.parse(input);
-    const result = await prisma.$transaction(
-      data.map(tx => prisma.transaction.create({ data: tx }))
-    );
-    return { data: result as Transaction[] };
-  } catch (error) {
-    console.error('Failed to create transactions:', error);
-    return { error: 'Internal server error' };
-  }
-}
+export const addBulkTransactions = createServerFn({ method: "POST" })
+  .validator(bulkTransactionSchema)
+  .handler(async ({ data }) => {
+    try {
+      const result = await prisma.$transaction(
+        data.map(tx => prisma.transaction.create({ data: tx }))
+      );
+      return { data: result as Transaction[] };
+    } catch (error) {
+      console.error('Failed to create transactions:', error);
+      return { error: 'Internal server error' };
+    }
+  });
 
-export async function removeTransaction(input: { id: string }) {
-  try {
-    const { id } = z.object({ id: z.string() }).parse(input);
-    await prisma.transaction.delete({ where: { id } });
-    return { success: true };
-  } catch (error) {
-    console.error('Failed to delete transaction:', error);
-    return { error: 'Internal server error' };
-  }
-}
+export const removeTransaction = createServerFn({ method: "POST" })
+  .validator(z.object({ id: z.string() }))
+  .handler(async ({ data: { id } }) => {
+    try {
+      await prisma.transaction.delete({ where: { id } });
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to delete transaction:', error);
+      return { error: 'Internal server error' };
+    }
+  });
 
-export async function clearAllTransactions() {
-  try {
-    await prisma.transaction.deleteMany();
-    return { success: true };
-  } catch (error) {
-    console.error('Failed to clear transactions:', error);
-    return { error: 'Internal server error' };
-  }
-}
+export const clearAllTransactions = createServerFn({ method: "POST" })
+  .handler(async () => {
+    try {
+      await prisma.transaction.deleteMany();
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to clear transactions:', error);
+      return { error: 'Internal server error' };
+    }
+  });
