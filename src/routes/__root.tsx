@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { PortfolioProvider } from "../context/PortfolioContext";
 import { getTransactions } from "../actions/transactions";
+import { getPrices } from "../actions/prices";
 
 function NotFoundComponent() {
   return (
@@ -105,7 +106,36 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   }),
   loader: async () => {
     const res = await getTransactions();
-    return { initialTransactions: res.data || [] };
+    const transactions = res.data || [];
+    
+    // Only fetch prices for active holdings to avoid rate limits
+    const holdings: Record<string, number> = {};
+    transactions.forEach(tx => {
+      if (tx.symbol !== 'GEF Cash' && tx.symbol !== 'Cash') {
+        if (tx.type === 'BUY') {
+          holdings[tx.symbol] = (holdings[tx.symbol] || 0) + tx.shares;
+        } else if (tx.type === 'SELL') {
+          holdings[tx.symbol] = (holdings[tx.symbol] || 0) - tx.shares;
+        }
+      }
+    });
+    
+    const activeSymbols = Object.entries(holdings)
+      .filter(([_, shares]) => shares > 0.000001)
+      .map(([sym]) => sym);
+      
+    const symbols = Array.from(new Set(activeSymbols));
+    if (!symbols.includes('URTH')) symbols.push('URTH');
+    
+    let initialPrices = {};
+    if (symbols.length > 0) {
+      const priceRes = await getPrices({ data: { symbols } });
+      if (priceRes.data) {
+        initialPrices = priceRes.data;
+      }
+    }
+    
+    return { initialTransactions: transactions, initialPrices };
   },
   shellComponent: RootShell,
   component: RootComponent,
@@ -129,11 +159,11 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const { initialTransactions } = Route.useLoaderData();
+  const { initialTransactions, initialPrices } = Route.useLoaderData();
 
   return (
     <QueryClientProvider client={queryClient}>
-      <PortfolioProvider initialTransactions={initialTransactions}>
+      <PortfolioProvider initialTransactions={initialTransactions} initialPrices={initialPrices}>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
       </PortfolioProvider>

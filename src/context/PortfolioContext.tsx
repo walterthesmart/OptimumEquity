@@ -30,9 +30,9 @@ interface PortfolioContextType {
 
 const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
 
-export function PortfolioProvider({ children, initialTransactions = [] }: { children: ReactNode, initialTransactions?: Transaction[] }) {
+export function PortfolioProvider({ children, initialTransactions = [], initialPrices = {} }: { children: ReactNode, initialTransactions?: Transaction[], initialPrices?: Record<string, PriceData> }) {
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
-  const [fetchedPrices, setFetchedPrices] = useState<Record<string, PriceData>>({});
+  const [fetchedPrices, setFetchedPrices] = useState<Record<string, PriceData>>(initialPrices);
   const [customPrices, setCustomPrices] = useState<Record<string, number>>({});
   const [isLoadingPrices, setIsLoadingPrices] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
