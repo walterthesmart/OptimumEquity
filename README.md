@@ -1,14 +1,11 @@
-# Welcome to your Lovable project
+# Optimum Equity
 
-This project was built with [Lovable](https://lovable.dev).
+This project is a React and TanStack Router based portfolio tracker.
 
-## Build with Lovable
+## Getting Started
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+1. Run `npm install` to install dependencies.
+2. Run `npm run dev` to start the development server.
 
 ## Development
 

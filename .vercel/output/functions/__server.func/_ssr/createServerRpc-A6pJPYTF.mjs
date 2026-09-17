@@ -1,5 +1,5 @@
-import { t as TSS_SERVER_FUNCTION } from "./server-DiRP4YEU.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/createServerRpc-B1r-8S0j.js
+import { t as TSS_SERVER_FUNCTION } from "./ssr.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/createServerRpc-A6pJPYTF.js
 var createServerRpc = (serverFnMeta, splitImportFn) => {
 	const url = "/_serverFn/" + serverFnMeta.id;
 	return Object.assign(splitImportFn, {

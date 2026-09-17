@@ -38,3 +38,5 @@ dist-ssr
 
 # Copies and backups
 copy/
+node_modules
+.next
