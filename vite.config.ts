@@ -17,7 +17,7 @@ export default defineConfig({
     nitro({
       preset: process.env.VERCEL ? 'vercel' : undefined,
       externals: {
-        traceInclude: ['tslib']
+        inline: ['tslib']
       }
     }),
 
