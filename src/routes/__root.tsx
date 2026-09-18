@@ -46,6 +46,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           This page didn't load
         </h1>
+        <p className="mt-2 text-sm text-red-500 font-mono text-left bg-accent p-2 rounded">
+          {error.message}
+        </p>
         <p className="mt-2 text-sm text-muted-foreground">
           Something went wrong on our end. You can try refreshing or head back home.
         </p>
@@ -106,6 +109,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   }),
   loader: async () => {
     const res = await getTransactions();
+    if (res.error) {
+      throw new Error(res.error);
+    }
     const transactions = res.data || [];
     
     // Only fetch prices for active holdings to avoid rate limits

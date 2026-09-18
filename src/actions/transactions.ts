@@ -27,7 +27,7 @@ export const getTransactions = createServerFn({ method: "GET" })
       return { data: transactions as Transaction[] };
     } catch (error) {
       console.error('Failed to fetch transactions:', error);
-      return { error: 'Internal server error' };
+      return { error: error instanceof Error ? error.message : String(error) };
     }
   });
 
