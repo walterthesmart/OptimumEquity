@@ -99,20 +99,19 @@ export function Dashboard() {
         value={`$${metrics.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
         meta={metrics.returnPercentage >= 0 ? `+${metrics.returnPercentage.toFixed(2)}% Return` : `${metrics.returnPercentage.toFixed(2)}% Return`}
         metaTone={metrics.returnPercentage >= 0 ? "positive" : "negative"}
-        extra={<span className="text-xs text-muted-foreground font-medium bg-muted px-2 py-1 rounded-sm">NAV: ${nav.toFixed(2)}</span>}
         icon={Globe2}
-        onClick={() => setModal("navChart")}
+        onClick={() => setModal("performance")}
       />
     ),
-    twr: (
+    nav: (
       <SummaryCard
-        key="twr"
-        label="Time-Weighted Return"
-        value={`${advanced.twr > 0 ? '+' : ''}${advanced.twr.toFixed(2)}%`}
-        meta={`TWR Performance`}
-        metaTone={advanced.twr >= 0 ? "mint" : "sand"}
-        icon={LineChart}
-        onClick={() => setModal("performance")}
+        key="nav"
+        label="Net Asset Value (NAV)"
+        value={`$${nav.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+        meta="Growth since inception"
+        metaTone="muted"
+        icon={TrendingUp}
+        onClick={() => setModal("navChart")}
       />
     ),
     cash: (
@@ -140,7 +139,7 @@ export function Dashboard() {
   } as const;
 
   const sectionCards: Record<SectionId, (keyof typeof summaryCards)[]> = {
-    overview: ["totalValue", "twr", "cash", "transactions"],
+    overview: ["totalValue", "nav", "cash", "transactions"],
     transactions: [],
     navHistory: [],
   };

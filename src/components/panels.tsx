@@ -14,11 +14,13 @@ export function NavChartPanel() {
 
   const history = useMemo(() => {
     const raw = calculateHistoricalNAV(transactions, livePrices);
+    const initialNav = raw.length > 0 ? raw[0].nav : 100;
     // Convert msciTotalReturn to percentage (x100) so it matches Total Return format
     return raw.map(d => ({
       ...d,
       totalReturnPct: d.totalReturn * 100,
-      msciTotalReturnPct: d.msciTotalReturn ? d.msciTotalReturn * 100 : 0
+      msciTotalReturnPct: d.msciTotalReturn ? d.msciTotalReturn * 100 : 0,
+      msciNav: d.msciTotalReturn ? initialNav * (1 + d.msciTotalReturn) : initialNav
     }));
   }, [transactions, livePrices]);
 
@@ -50,19 +52,20 @@ export function NavChartPanel() {
             />
             <YAxis 
               tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} 
-              tickFormatter={(val) => `${val}%`}
+              tickFormatter={(val) => `$${val}`}
               axisLine={false} 
-              tickLine={false} 
+              tickLine={false}
+              domain={['auto', 'auto']}
             />
             <Tooltip 
               contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '6px', fontSize: '12px' }}
               itemStyle={{ color: 'var(--foreground)' }}
               labelStyle={{ color: 'var(--muted-foreground)', marginBottom: '4px' }}
-              formatter={(value: number, name: string) => [`${value.toFixed(2)}%`, name === 'totalReturnPct' ? 'Portfolio Return' : 'MSCI World Return']}
+              formatter={(value: number, name: string) => [`$${value.toFixed(2)}`, name === 'nav' ? 'Portfolio NAV' : 'MSCI World (Rebased)']}
             />
             <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-            <Line type="monotone" name="Portfolio Return" dataKey="totalReturnPct" stroke="var(--primary)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-            <Line type="monotone" name="MSCI World Return" dataKey="msciTotalReturnPct" stroke="var(--chart-3)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+            <Line type="monotone" name="Portfolio NAV" dataKey="nav" stroke="var(--primary)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+            <Line type="monotone" name="MSCI World (Rebased)" dataKey="msciNav" stroke="var(--chart-3)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
           </LineChart>
         </ResponsiveContainer>
       </div>
