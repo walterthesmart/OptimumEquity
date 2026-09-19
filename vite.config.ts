@@ -31,6 +31,7 @@ export default defineConfig({
     }
   },
   ssr: {
-    noExternal: ['tslib', /@radix-ui\/.*/]
+    noExternal: true,
+    external: ['@prisma/client', '.prisma']
   }
 });
