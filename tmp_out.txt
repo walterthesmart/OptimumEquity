@@ -12,6 +12,7 @@ package.json
 query_engine-windows.dll.node*
 query_engine-windows.dll.node.tmp18904*
 query_engine-windows.dll.node.tmp26516*
+query_engine-windows.dll.node.tmp30444*
 schema.prisma
 wasm.d.ts
 wasm.js

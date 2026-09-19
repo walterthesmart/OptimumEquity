@@ -18,7 +18,7 @@ export default defineConfig({
       preset: process.env.VERCEL ? 'vercel' : undefined,
       externals: {
         inline: ['tslib'],
-        traceInclude: ['node_modules/.prisma/client/**/*']
+        traceInclude: ['node_modules/.prisma/client/**/*', 'node_modules/tslib/**/*']
       }
     }),
 
@@ -29,5 +29,8 @@ export default defineConfig({
     alias: {
       "@": "/src"
     }
+  },
+  ssr: {
+    noExternal: ['tslib', /@radix-ui\/.*/]
   }
 });
