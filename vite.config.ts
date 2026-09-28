@@ -17,8 +17,7 @@ export default defineConfig({
     nitro({
       preset: process.env.VERCEL ? 'vercel' : undefined,
       externals: {
-        inline: [/tslib/, /@radix-ui/],
-        traceInclude: ['node_modules/.prisma/client/**/*', 'node_modules/tslib/**/*']
+        traceInclude: ['node_modules/.prisma/client/**/*']
       }
     }),
 
