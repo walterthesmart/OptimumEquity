@@ -1,4 +1,4 @@
-import { n as createMiddleware, t as createCsrfMiddleware } from "./createCsrfMiddleware-B2To0gPJ.mjs";
+import { n as createCsrfMiddleware, r as createMiddleware } from "./ssr.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/start-DajprIFM.js
 function dedupeSerializationAdapters(deduped, serializationAdapters) {
 	for (let i = 0, len = serializationAdapters.length; i < len; i++) {
