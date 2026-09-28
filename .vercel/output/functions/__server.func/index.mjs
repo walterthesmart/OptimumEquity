@@ -1,6 +1,6 @@
 globalThis.__nitro_main__ = import.meta.url;
 import { n as HTTPError, r as defineLazyEventHandler, t as H3Core } from "./_libs/h3+rou3+srvx.mjs";
-import { t as NodeResponse } from "./_libs/srvx.mjs";
+import { r as NodeResponse } from "./_libs/h3-v2+rou3+srvx.mjs";
 //#region #nitro-vite-setup
 function lazyService(loader) {
 	let promise, mod;
@@ -10,7 +10,7 @@ function lazyService(loader) {
 		return promise.then((mod) => mod.fetch(req));
 	} };
 }
-var services = { ["ssr"]: lazyService(() => import("./_ssr/ssr.mjs").then((n) => n.t)) };
+var services = { ["ssr"]: lazyService(() => import("./_ssr/ssr.mjs").then((n) => n.i)) };
 globalThis.__nitro_vite_envs__ = services;
 //#endregion
 //#region node_modules/nitro/dist/runtime/internal/route-rules.mjs
