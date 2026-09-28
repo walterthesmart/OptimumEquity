@@ -103,6 +103,23 @@ async function fetchQuoteWithFallback(symbol: string) {
 }
 
 async function fetchHistoricalWithFallback(symbol: string, startDate: string) {
+  // FIRST: Read from database. The cron job handles daily updates.
+  try {
+    const cachedHistory = await prisma.historicalPrice.findMany({
+      where: { 
+        symbol,
+        date: { gte: startDate }
+      },
+      orderBy: { date: 'asc' }
+    });
+    
+    if (cachedHistory.length > 0) {
+      return cachedHistory.map(h => ({ date: h.date, close: h.close }));
+    }
+  } catch(e) {
+    console.error(`Error reading HistoricalPrice for ${symbol}:`, e);
+  }
+
   let lastError;
   let fetchedData: any[] = [];
   
@@ -138,35 +155,18 @@ async function fetchHistoricalWithFallback(symbol: string, startDate: string) {
   // If we fetched new data, save it to DB
   if (fetchedData.length > 0) {
     try {
-      // Background cache update
-      Promise.all(fetchedData.map(d => 
-        prisma.historicalPrice.upsert({
-          where: { symbol_date: { symbol, date: d.date } },
-          update: { close: d.close },
-          create: { symbol, date: d.date, close: d.close }
-        })
-      )).catch(e => console.error(`Failed to cache historical data for ${symbol}:`, e));
+      // Use createMany to avoid crashing Prisma with thousands of upserts
+      prisma.historicalPrice.createMany({
+        data: fetchedData.map(d => ({
+          symbol,
+          date: d.date,
+          close: d.close
+        })),
+        skipDuplicates: true
+      }).catch(e => console.error(`Failed to cache historical data for ${symbol}:`, e));
     } catch(e) {}
     
     return fetchedData;
-  }
-
-  // Fallback to database if fetching failed completely or rate limited
-  try {
-    const cachedHistory = await prisma.historicalPrice.findMany({
-      where: { 
-        symbol,
-        date: { gte: startDate }
-      },
-      orderBy: { date: 'asc' }
-    });
-    
-    if (cachedHistory.length > 0) {
-      console.warn(`APIs failed, using cached historical data for ${symbol}`);
-      return cachedHistory.map(h => ({ date: h.date, close: h.close }));
-    }
-  } catch(e) {
-    console.error(`Error reading HistoricalPrice for ${symbol}:`, e);
   }
   
   return [];
