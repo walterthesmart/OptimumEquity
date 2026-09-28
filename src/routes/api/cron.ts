@@ -19,30 +19,36 @@ export const APIRoute = createAPIFileRoute('/api/cron')({
         select: { symbol: true }
       });
       
+      const excludedStocks = ['ET', 'EPD', 'PEP', 'PG', 'ABBV', 'DOC', 'O', 'VZ', 'BAC', 'CMI', 'URTH'];
       const allSymbols = [...new Set(txs.map(t => t.symbol))];
-      const symbols = allSymbols.filter(s => s !== 'GEF Cash' && !s.includes(' '));
+      const symbols = allSymbols.filter(s => s !== 'GEF Cash' && !s.includes(' ') && !excludedStocks.includes(s));
+      
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       
       let updated = 0;
       for (const symbol of symbols) {
         try {
           const histData = await Promise.race([
-            yahooFinance.historical(symbol, { period1: '2026-07-20', period2: new Date(), interval: '1d' }),
-            timeout(8000)
+            yahooFinance.historical(symbol, { period1: sevenDaysAgo.toISOString().split('T')[0], period2: new Date(), interval: '1d' }),
+            timeout(4000)
           ]) as any[];
           
           if (histData && histData.length > 0) {
-              const latestDateStr = histData[histData.length - 1].date.toISOString().split('T')[0];
-              const latestClose = histData[histData.length - 1].close;
-              await prisma.historicalPrice.upsert({
-                where: { symbol_date: { symbol, date: latestDateStr } },
-                update: { close: latestClose },
-                create: { symbol, date: latestDateStr, close: latestClose }
-              });
+            const dataToInsert = histData.map(d => ({
+              symbol,
+              date: d.date.toISOString().split('T')[0],
+              close: d.close
+            }));
+            await prisma.historicalPrice.createMany({
+              data: dataToInsert,
+              skipDuplicates: true
+            });
           }
           
           const quote = await Promise.race([
             yahooFinance.quote(symbol),
-            timeout(4000)
+            timeout(2000)
           ]) as any;
 
           if (quote && quote.regularMarketPrice) {
@@ -53,7 +59,7 @@ export const APIRoute = createAPIFileRoute('/api/cron')({
              });
           }
           updated++;
-          await delay(200); // Prevent rate-limit
+          await delay(50);
         } catch (e: any) {
           console.error(`Failed to fetch/update ${symbol}:`, e.message);
         }
