@@ -21,9 +21,5 @@ export default defineConfig({
     alias: {
       "@": "/src"
     }
-  },
-  ssr: {
-    noExternal: true,
-    external: ['@prisma/client', '.prisma']
   }
 });
